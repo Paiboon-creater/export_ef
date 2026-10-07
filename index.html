@@ -1,647 +1,157 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>JAGUAR // STOCK BOARD REPORT</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- เพิ่ม SheetJS สำหรับ Export Excel แยกชีต -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  
-  <style>
-    /* ==========================================
-       THEME: STOCK MARKET BOARD (DARK MODE)
-    ========================================== */
-    :root {
-      --bg-black: #000000;
-      --panel-bg: #0a0a0a;
-      --border-dark: #333333;
-      --text-main: #e0e0e0;
-      --text-muted: #888888;
-      --stock-green: #00ff00;
-      --stock-red: #ff3333;
-      --stock-yellow: #ffcc00;
-      --stock-blue: #00ccff;
-      --highlight: #1a1a1a;
-    }
-
-    body {
-      font-family: 'Courier New', Courier, monospace, 'Sarabun', sans-serif;
-      background-color: var(--bg-black);
-      color: var(--text-main);
-      margin: 0; padding: 15px;
-      font-size: 14px;
-    }
-
-    .container { max-width: 1400px; margin: 0 auto; }
-
-    /* HOME NAV BUTTON */
-    .nav-btn {
-      background: rgba(0, 204, 255, 0.1); border: 1px solid var(--stock-blue);
-      color: var(--stock-blue); padding: 8px 16px; border-radius: 4px;
-      text-decoration: none; font-weight: bold; font-size: 14px;
-      display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s;
-      cursor: pointer;
-    }
-    .nav-btn:hover { 
-      background: var(--stock-blue); color: var(--bg-black); 
-      box-shadow: 0 0 10px rgba(0, 204, 255, 0.5); 
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JAGUAR PRODUCTION - Dashboard</title>
     
-    .btn-manual-toggle {
-      border-color: var(--stock-yellow); color: var(--stock-yellow); background: rgba(255, 204, 0, 0.1);
-    }
-    .btn-manual-toggle:hover {
-      background: var(--stock-yellow); color: var(--bg-black); box-shadow: 0 0 10px rgba(255, 204, 0, 0.5); 
-    }
+    <!-- โหลดไลบรารี SheetJS สำหรับทำ Excel แยก Sheet (ตัวนี้จะแก้ Error ที่เคยเจอครับ) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    /* HEADER */
-    .app-header {
-      display: flex; justify-content: space-between; align-items: flex-end;
-      border-bottom: 2px solid var(--border-dark); padding-bottom: 10px; margin-bottom: 15px;
-    }
-    .app-title {
-      font-size: 24px; font-weight: bold; color: var(--stock-yellow); margin: 0;
-      letter-spacing: 2px; text-transform: uppercase;
-    }
-    .app-subtitle { color: var(--text-muted); font-size: 12px; margin-top: 5px; }
-
-    /* SUMMARY BOARD */
-    .summary-board {
-      display: flex; gap: 15px; margin-bottom: 20px;
-      background: var(--panel-bg); border: 1px solid var(--border-dark);
-สวัสดีครับ คุณ ไพบูลย์ 
-
-เพื่ออัปเกรดระบบให้สามารถ **ส่งออกไฟล์ Excel แบบแยกชีท (Sheet) ตามกลุ่ม Order** (MOMTC, MOMTB, MOMTN, MOBCC, MOBCB, MOBCN) พร้อมทั้งเพิ่ม **ตัวกรองกลุ่ม Order (Prefix)** และ **ระบบจัดเรียงข้อมูล (Sort)** ผมได้ปรับปรุง Code HTML โดยใช้ไลบรารี `SheetJS (XLSX)` สำหรับจัดการไฟล์ Excel ครับ
-
-นำ Code ด้านล่างนี้ไปวางทับไฟล์เดิมได้เลยครับ
-
-```html
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>JAGUAR // STOCK BOARD REPORT</title>
-  <link rel="stylesheet" href="[https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
-  
-  <!-- เพิ่ม Library SheetJS สำหรับ Export Excel แบบแยกชีท -->
-  <script src="[https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js](https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js)"></script>
-  
-  <style>
-    /* ==========================================
-       THEME: STOCK MARKET BOARD (DARK MODE)
-    ========================================== */
-    :root {
-      --bg-black: #000000;
-      --panel-bg: #0a0a0a;
-      --border-dark: #333333;
-      --text-main: #e0e0e0;
-      --text-muted: #888888;
-      --stock-green: #00ff00;
-      --stock-red: #ff3333;
-      --stock-yellow: #ffcc00;
-      --stock-blue: #00ccff;
-      --highlight: #1a1a1a;
-    }
-
-    body {
-      font-family: 'Courier New', Courier, monospace, 'Sarabun', sans-serif;
-      background-color: var(--bg-black);
-      color: var(--text-main);
-      margin: 0; padding: 15px;
-      font-size: 14px;
-    }
-
-    .container { max-width: 1400px; margin: 0 auto; }
-
-    /* HOME NAV BUTTON */
-    .nav-btn {
-      background: rgba(0, 204, 255, 0.1); border: 1px solid var(--stock-blue);
-      color: var(--stock-blue); padding: 8px 16px; border-radius: 4px;
-      text-decoration: none; font-weight: bold; font-size: 14px;
-      display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s;
-      cursor: pointer;
-    }
-    .nav-btn:hover { 
-      background: var(--stock-blue); color: var(--bg-black); 
-      box-shadow: 0 0 10px rgba(0, 204, 255, 0.5); 
-    }
-    
-    .btn-manual-toggle {
-      border-color: var(--stock-yellow); color: var(--stock-yellow); background: rgba(255, 204, 0, 0.1);
-    }
-    .btn-manual-toggle:hover {
-      background: var(--stock-yellow); color: var(--bg-black); box-shadow: 0 0 10px rgba(255, 204, 0, 0.5); 
-    }
-
-    /* HEADER */
-    .app-header {
-      display: flex; justify-content: space-between; align-items: flex-end;
-      border-bottom: 2px solid var(--border-dark); padding-bottom: 10px; margin-bottom: 15px;
-    }
-    .app-title {
-      font-size: 24px; font-weight: bold; color: var(--stock-yellow); margin: 0;
-      letter-spacing: 2px; text-transform: uppercase;
-    }
-    .app-subtitle { color: var(--text-muted); font-size: 12px; margin-top: 5px; }
-
-    /* SUMMARY BOARD */
-    .summary-board {
-      display: flex; gap: 15px; margin-bottom: 20px;
-      background: var(--panel-bg); border: 1px solid var(--border-dark);
-      padding: 15px; border-radius: 4px;
-    }
-    .sum-box {
-      flex: 1; text-align: center; border-right: 1px dashed var(--border-dark);
-    }
-    .sum-box:last-child { border-right: none; }
-    .sum-box span { 
-      color: var(--stock-blue); font-size: 12px; text-transform: uppercase; 
-      letter-spacing: 1px; display: block; margin-bottom: 5px; font-weight: bold;
-    }
-    .sum-box h2 { margin: 0; font-size: 32px; font-family: monospace; }
-    
-    /* TOOLBAR & FILTERS */
-    .toolbar {
-      background: var(--panel-bg); border: 1px solid var(--border-dark);
-      padding: 15px; border-radius: 4px; margin-bottom: 20px;
-    }
-    .filter-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 15px;
-    }
-    .filter-group { display: flex; flex-direction: column; gap: 5px; }
-    .filter-group label { color: var(--text-muted); font-size: 11px; text-transform: uppercase; }
-    .filter-group input, .filter-group select {
-      background: #111; border: 1px solid #444; color: var(--stock-yellow);
-      padding: 8px; font-family: inherit; font-size: 14px; border-radius: 2px;
-      width: 100%; box-sizing: border-box;
-    }
-    .filter-group input:focus, .filter-group select:focus { border-color: var(--stock-blue); outline: none; }
-    .filter-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) sepia(1) saturate(5) hue-rotate(175deg); cursor: pointer; }
-
-    .action-buttons {
-      display: flex; gap: 10px; justify-content: flex-start;
-      padding-top: 15px; border-top: 1px dashed var(--border-dark); flex-wrap: wrap;
-    }
-    .btn {
-      padding: 8px 16px; border-radius: 2px; font-family: inherit; font-weight: bold;
-      cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase;
-      border: 1px solid; transition: all 0.2s; background: #000; font-size: 14px;
-    }
-    .btn-fetch { color: var(--stock-blue); border-color: var(--stock-blue); }
-    .btn-fetch:hover { background: var(--stock-blue); color: #000; }
-    .btn-export { color: var(--stock-green); border-color: var(--stock-green); }
-    .btn-export:hover { background: var(--stock-green); color: #000; }
-    .btn-print { color: var(--text-main); border-color: var(--text-main); }
-    .btn-print:hover { background: var(--text-main); color: #000; }
-    .btn-sort { color: #fff; border-color: #555; background: #222; }
-    .btn-sort:hover { background: #444; border-color: #fff; }
-
-    /* TABLE: STOCK BOARD STYLE */
-    .table-responsive { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th {
-      color: var(--text-muted); border-bottom: 1px solid var(--border-dark);
-      padding: 12px 8px; font-weight: normal; text-transform: uppercase; font-size: 12px;
-    }
-    td {
-      padding: 10px 8px; border-bottom: 1px solid #1a1a1a;
-      vertical-align: middle; white-space: nowrap;
-    }
-    tbody tr:hover { background-color: var(--highlight); }
-    
-    .text-right { text-align: right; }
-    .text-center { text-align: center; }
-    
-    .val-up { color: var(--stock-green); font-weight: bold; }
-    .val-down { color: var(--stock-red); font-weight: bold; }
-    .val-mid { color: var(--stock-yellow); font-weight: bold; }
-    
-    .loading-msg { text-align: center; padding: 30px; color: var(--stock-blue); font-size: 16px; letter-spacing: 2px; }
-
-    /* MODAL (User Manual) */
-    .modal {
-      display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-      width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.85);
-      backdrop-filter: blur(4px);
-    }
-    .modal-content {
-      background-color: var(--panel-bg); margin: 5% auto; padding: 20px 30px;
-      border: 1px solid var(--border-dark); width: 90%; max-width: 800px;
-      border-radius: 4px; box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
-    }
-    .modal-header {
-      display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px dashed var(--border-dark); padding-bottom: 10px; margin-bottom: 20px;
-    }
-    .modal-header h2 { color: var(--stock-yellow); margin: 0; letter-spacing: 1px; }
-    .close-modal { color: var(--text-muted); font-size: 28px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .close-modal:hover { color: var(--stock-red); }
-    .manual-body h3 { color: var(--stock-blue); border-bottom: 1px solid var(--border-dark); padding-bottom: 5px; margin-top: 25px; }
-    .manual-body p, .manual-body li { line-height: 1.7; font-size: 15px; color: var(--text-main); }
-    .manual-body ul { padding-left: 20px; }
-
-    /* PRINT STATEMENT HEADER (Hidden on Web) */
-    .print-header { display: none; }
-    .print-summary { display: none; }
-
-    /* ==========================================
-       PRINT MEDIA QUERY
-    ========================================== */
-    @media print {
-      body {
-        background-color: #ffffff; color: #000000;
-        font-family: 'Sarabun', sans-serif; font-size: 12px; margin: 0; padding: 0;
-      }
-      .no-print { display: none !important; }
-      
-      .print-header {
-        display: block; text-align: center; margin-bottom: 15px;
-        border-bottom: 2px solid #000; padding-bottom: 10px;
-      }
-      .print-header h1 { font-size: 20px; margin: 0 0 5px 0; font-family: 'Sarabun', sans-serif; }
-      .print-header p { margin: 0; font-size: 12px; color: #555; }
-
-      .print-summary {
-        display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: bold;
-      }
-
-      table { border: 1px solid #000; }
-      th { 
-        background-color: #f0f0f0; color: #000; font-weight: bold;
-        border: 1px solid #000; padding: 6px; font-size: 12px;
-        -webkit-print-color-adjust: exact;
-      }
-      td { 
-        border: 1px solid #ccc; color: #000 !important; padding: 6px; font-size: 12px;
-      }
-      
-      .val-up, .val-down, .val-mid { color: #000 !important; font-weight: bold; }
-    }
-  </style>
+    <style>
+        /* สไตล์เบื้องต้นให้คุมโทน Stock Board ดำ-เขียว */
+        body { background-color: #000; color: #fff; font-family: sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: center; }
+        th { background-color: #111; color: #00ff00; } /* หัวตารางสีเขียว */
+        
+        .action-bar { margin: 20px 0; }
+        .btn { 
+            padding: 10px 20px; 
+            margin-right: 10px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            border: none; 
+            border-radius: 4px;
+        }
+        .btn-excel { background-color: #1d6f42; color: white; }
+        .btn-sort { background-color: #444; color: white; border: 1px solid #00ff00; }
+        .btn-sort:hover { background-color: #00ff00; color: #000; }
+    </style>
 </head>
 <body>
 
-<div class="container">
-  
-  <!-- TOP NAVIGATION BUTTONS -->
-  <div style="display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px;" class="no-print">
-    <button class="nav-btn btn-manual-toggle" onclick="toggleManual()">
-      <i class="fa-solid fa-book-open"></i> คู่มือการใช้งาน
-    </button>
-    <a href="[https://paiboon-creater.github.io/Data_Information_Jaguar_productions/](https://paiboon-creater.github.io/Data_Information_Jaguar_productions/)" class="nav-btn">
-      <i class="fa-solid fa-house"></i> HOME APP
-    </a>
-  </div>
+    <div style="padding: 20px;">
+        <!-- แถบปุ่มกด -->
+        <div class="action-bar">
+            <button class="btn btn-excel" onclick="exportExcel()">📥 EXCEL EXPORT (แยก Sheet)</button>
+            <!-- ปุ่มเรียงข้อมูล โดยผมตั้งต้นให้เรียงตามคอลัมน์ Order No. (คอลัมน์ที่ 2) -->
+            <button class="btn btn-sort" onclick="sortTable(1)">🔃 SORT DATA (เรียงตาม Order No)</button>
+        </div>
 
-  <div class="app-header no-print">
-    <div>
-      <h1 class="app-title"><i class="fa-solid fa-chart-line"></i> PROD_BOARD</h1>
-      <div class="app-subtitle">LIVE PRODUCTION TRACKING TERMINAL</div>
-    </div>
-    <div id="statusText" style="color: var(--stock-blue); font-size: 12px;">SYSTEM_STATUS: STANDBY</div>
-  </div>
-
-  <!-- PRINT ONLY HEADER -->
-  <div class="print-header">
-    <h1>รายงานตรวจสอบยอดการผลิต (Production Statement)</h1>
-    <p>พิมพ์เมื่อ: <span id="printTimestamp"></span> | บริษัท จากัวร์ อินดัสทรีส์ (ประเทศไทย) จำกัด</p>
-  </div>
-  <div class="print-summary">
-    <span>ยอดผลิตรวม: <span id="printTotalQty">0</span> ชิ้น</span>
-    <span>ชั่วโมงทำงานรวม: <span id="printTotalHrs">0.00</span> ชม.</span>
-  </div>
-
-  <!-- SUMMARY BOARD (WEB ONLY) -->
-  <div class="summary-board no-print">
-    <div class="sum-box">
-      <span>TOTAL QTY (ยอดผลิตรวม)</span>
-      <h2 id="sumTotalQty" class="val-up">0</h2>
-    </div>
-    <div class="sum-box">
-      <span>TOTAL HOURS (ชม.ทำงานรวม)</span>
-      <h2 id="sumTotalHrs" class="val-mid">0.00</h2>
-    </div>
-  </div>
-
-  <div class="toolbar no-print">
-    <div class="filter-grid">
-      <!-- ดึงข้อมูลใหม่จาก DB เมื่อเปลี่ยนวันที่ -->
-      <div class="filter-group">
-        <label>จากวันที่ (DATE FROM)</label>
-        <input type="date" idผมได้ปรับแก้โค้ดให้คุณไพบูลย์เรียบร้อยแล้วครับ โดยมีการอัปเกรดความสามารถหลัก 3 ส่วนตามที่ต้องการ:
-
-1. **เพิ่มไลบรารี SheetJS:** สำหรับแยกชีต Excel อัตโนมัติตามตัวอักษรนำหน้า Order No. (เช่น `MOMTC`, `MOBCC` จะถูกจับแยกเป็นชีตใครชีตมัน)
-2. **เพิ่มตัวกรอง "กลุ่ม ORDER (PREFIX)":** สามารถเลือกดูเฉพาะกลุ่มออเดอร์ในหน้าเว็บได้ทันที
-3. **เพิ่มปุ่มตัวกรอง "เรียงลำดับ (SORT BY)":** สำหรับเรียงข้อมูลตามวันที่, ยอดผลิต (มากไปน้อย), หรือตามเลขที่ออเดอร์
-
-คุณไพบูลย์สามารถคัดลอกโค้ดทั้งหมดด้านล่างนี้ ไปทับในไฟล์ HTML เดิมได้เลยครับ:
-
-```html
-<!DOCTYPE html>
-<html lang="th">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>JAGUAR // STOCK BOARD REPORT</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- นำเข้าไลบรารี SheetJS สำหรับสร้าง Excel แยกชีต -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  
-  <style>
-    /* ==========================================
-       THEME: STOCK MARKET BOARD (DARK MODE)
-    ========================================== */
-    :root {
-      --bg-black: #000000;
-      --panel-bg: #0a0a0a;
-      --border-dark: #333333;
-      --text-main: #e0e0e0;
-      --text-muted: #888888;
-      --stock-green: #00ff00;
-      --stock-red: #ff3333;
-      --stock-yellow: #ffcc00;
-      --stock-blue: #00ccff;
-      --highlight: #1a1a1a;
-    }
-
-    body {
-      font-family: 'Courier New', Courier, monospace, 'Sarabun', sans-serif;
-      background-color: var(--bg-black);
-      color: var(--text-main);
-      margin: 0; padding: 15px;
-      font-size: 14px;
-    }
-
-    .container { max-width: 1400px; margin: 0 auto; }
-
-    /* HOME NAV BUTTON */
-    .nav-btn {
-      background: rgba(0, 204, 255, 0.1); border: 1px solid var(--stock-blue);
-      color: var(--stock-blue); padding: 8px 16px; border-radius: 4px;
-      text-decoration: none; font-weight: bold; font-size: 14px;
-      display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s;
-      cursor: pointer;
-    }
-    .nav-btn:hover { 
-      background: var(--stock-blue); color: var(--bg-black); 
-      box-shadow: 0 0 10px rgba(0, 204, 255, 0.5); 
-    }
-    
-    .btn-manual-toggle {
-      border-color: var(--stock-yellow); color: var(--stock-yellow); background: rgba(255, 204, 0, 0.1);
-    }
-    .btn-manual-toggle:hover {
-      background: var(--stock-yellow); color: var(--bg-black); box-shadow: 0 0 10px rgba(255, 204, 0, 0.5); 
-    }
-
-    /* HEADER */
-    .app-header {
-      display: flex; justify-content: space-between; align-items: flex-end;
-      border-bottom: 2px solid var(--border-dark); padding-bottom: 10px; margin-bottom: 15px;
-    }
-    .app-title {
-      font-size: 24px; font-weight: bold; color: var(--stock-yellow); margin: 0;
-      letter-spacing: 2px; text-transform: uppercase;
-    }
-    .app-subtitle { color: var(--text-muted); font-size: 12px; margin-top: 5px; }
-
-    /* SUMMARY BOARD */
-    .summary-board {
-      display: flex; gap: 15px; margin-bottom: 20px;
-      background: var(--panel-bg); border: 1px solid var(--border-dark);
-      padding: 15px; border-radius: 4px;
-    }
-    .sum-box {
-      flex: 1; text-align: center; border-right: 1px dashed var(--border-dark);
-    }
-    .sum-box:last-child { border-right: none; }
-    .sum-box span { 
-      color: var(--stock-blue); font-size: 12px; text-transform: uppercase; 
-      letter-spacing: 1px; display: block; margin-bottom: 5px; font-weight: bold;
-    }
-    .sum-box h2 { margin: 0; font-size: 32px; font-family: monospace; }
-    
-    /* TOOLBAR & FILTERS */
-    .toolbar {
-      background: var(--panel-bg); border: 1px solid var(--border-dark);
-      padding: 15px; border-radius: 4px; margin-bottom: 20px;
-    }
-    .filter-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 15px;
-    }
-    .filter-group { display: flex; flex-direction: column; gap: 5px; }
-    .filter-group label { color: var(--text-muted); font-size: 11px; text-transform: uppercase; }
-    .filter-group input, .filter-group select {
-      background: #111; border: 1px solid #444; color: var(--stock-yellow);
-      padding: 8px; font-family: inherit; font-size: 13px; border-radius: 2px;
-    }
-    .filter-group input:focus, .filter-group select:focus { border-color: var(--stock-blue); outline: none; }
-    .filter-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) sepia(1) saturate(5) hue-rotate(175deg); cursor: pointer; }
-
-    .action-buttons {
-      display: flex; gap: 10px; justify-content: flex-start;
-      padding-top: 15px; border-top: 1px dashed var(--border-dark);
-    }
-    .btn {
-      padding: 8px 16px; border-radius: 2px; font-family: inherit; font-weight: bold;
-      cursor: pointer; display: inline-flex; align-items: center; gap: 8px; text-transform: uppercase;
-      border: 1px solid; transition: all 0.2s; background: #000;
-    }
-    .btn-fetch { color: var(--stock-blue); border-color: var(--stock-blue); }
-    .btn-fetch:hover { background: var(--stock-blue); color: #000; }
-    .btn-export { color: var(--stock-green); border-color: var(--stock-green); }
-    .btn-export:hover { background: var(--stock-green); color: #000; }
-    .btn-print { color: var(--text-main); border-color: var(--text-main); }
-    .btn-print:hover { background: var(--text-main); color: #000; }
-
-    /* TABLE: STOCK BOARD STYLE */
-    .table-responsive { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th {
-      color: var(--text-muted); border-bottom: 1px solid var(--border-dark);
-      padding: 12px 8px; font-weight: normal; text-transform: uppercase; font-size: 12px;
-    }
-    td {
-      padding: 10px 8px; border-bottom: 1px solid #1a1a1a;
-      vertical-align: middle; white-space: nowrap;
-    }
-    tbody tr:hover { background-color: var(--highlight); }
-    
-    .text-right { text-align: right; }
-    .text-center { text-align: center; }
-    
-    .val-up { color: var(--stock-green); font-weight: bold; }
-    .val-down { color: var(--stock-red); font-weight: bold; }
-    .val-mid { color: var(--stock-yellow); font-weight: bold; }
-    
-    .loading-msg { text-align: center; padding: 30px; color: var(--stock-blue); font-size: 16px; letter-spacing: 2px; }
-
-    /* MODAL */
-    .modal {
-      display: none; position: fixed; z-index: 1000; left: 0; top: 0;
-      width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.85);
-      backdrop-filter: blur(4px);
-    }
-    .modal-content {
-      background-color: var(--panel-bg); margin: 5% auto; padding: 20px 30px;
-      border: 1px solid var(--border-dark); width: 90%; max-width: 800px;
-      border-radius: 4px; box-shadow: 0 0 20px rgba(255, 204, 0, 0.2);
-    }
-    .modal-header {
-      display: flex; justify-content: space-between; align-items: center;
-      border-bottom: 1px dashed var(--border-dark); padding-bottom: 10px; margin-bottom: 20px;
-    }
-    .modal-header h2 { color: var(--stock-yellow); margin: 0; letter-spacing: 1px; }
-    .close-modal { color: var(--text-muted); font-size: 28px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-    .close-modal:hover { color: var(--stock-red); }
-
-    /* PRINT MEDIA QUERY */
-    .print-header { display: none; }
-    .print-summary { display: none; }
-    
-    @media print {
-      body {
-        background-color: #ffffff; color: #000000;
-        font-family: 'Sarabun', sans-serif; font-size: 12px; margin: 0; padding: 0;
-      }
-      .no-print { display: none !important; }
-      
-      .print-header {
-        display: block; text-align: center; margin-bottom: 15px;
-        border-bottom: 2px solid #000; padding-bottom: 10px;
-      }
-      .print-header h1 { font-size: 20px; margin: 0 0 5px 0; font-family: 'Sarabun', sans-serif; }
-      .print-header p { margin: 0; font-size: 12px; color: #555; }
-
-      .print-summary {
-        display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; font-weight: bold;
-      }
-
-      table { border: 1px solid #000; }
-      th { 
-        background-color: #f0f0f0; color: #000; font-weight: bold;
-        border: 1px solid #000; padding: 6px; font-size: 12px;
-        -webkit-print-color-adjust: exact;
-      }
-      td { 
-        border: 1px solid #ccc; color: #000 !important; padding: 6px; font-size: 12px;
-      }
-      .val-up, .val-down, .val-mid { color: #000 !important; font-weight: bold; }
-    }
-  </style>
-</head>
-<body>
-
-<div class="container">
-  
-  <div style="display: flex; justify-content: flex-end; margin-bottom: 10px; gap: 10px;" class="no-print">
-    <button class="nav-btn btn-manual-toggle" onclick="toggleManual()">
-      <i class="fa-solid fa-book-open"></i> คู่มือการใช้งาน
-    </button>
-    <a href="https://paiboon-creater.github.io/Data_Information_Jaguar_productions/" class="nav-btn">
-      <i class="fa-solid fa-house"></i> HOME APP
-    </a>
-  </div>
-
-  <div class="app-header no-print">
-    <div>
-      <h1 class="app-title"><i class="fa-solid fa-chart-line"></i> PROD_BOARD</h1>
-      <div class="app-subtitle">LIVE PRODUCTION TRACKING TERMINAL</div>
-    </div>
-    <div id="statusText" style="color: var(--stock-blue); font-size: 12px;">SYSTEM_STATUS: STANDBY</div>
-  </div>
-
-  <div class="print-header">
-    <h1>รายงานตรวจสอบยอดการผลิต (Production Statement)</h1>
-    <p>พิมพ์เมื่อ: <span id="printTimestamp"></span> | บริษัท จากัวร์ อินดัสทรีส์ (ประเทศไทย) จำกัด</p>
-  </div>
-  <div class="print-summary">
-    <span>ยอดผลิตรวม: <span id="printTotalQty">0</span> ชิ้น</span>
-    <span>ชั่วโมงทำงานรวม: <span id="printTotalHrs">0.00</span> ชม.</span>
-  </div>
-
-  <div class="summary-board no-print">
-    <div class="sum-box">
-      <span>TOTAL QTY (ยอดผลิตรวม)</span>
-      <h2 id="sumTotalQty" class="val-up">0</h2>
-    </div>
-    <div class="sum-box">
-      <span>TOTAL HOURS (ชม.ทำงานรวม)</span>
-      <h2 id="sumTotalHrs" class="val-mid">0.00</h2>
-    </div>
-  </div>
-
-  <div class="toolbar no-print">
-    <div class="filter-grid">
-      <div class="filter-group">
-        <label>จากวันที่</label>
-        <input type="date" id="filter_date_from" onchange="fetchDataFromDB()">
-      </div>
-      <div class="filter-group">
-        <label>ถึงวันที่</label>
-        <input type="date" id="filter_date_to" onchange="fetchDataFromDB()">
-      </div>
-      <div class="filter-group">
-        <label>กลุ่ม ORDER (PREFIX)</label>
-        <select id="filter_prefix" onchange="renderTable()">
-          <option value="">-- ALL PREFIX --</option>
-          <option value="MOMTC">MOMTC</option>
-          <option value="MOMTB">MOMTB</option>
-          <option value="MOMTN">MOMTN</option>
-          <option value="MOBCC">MOBCC</option>
-          <option value="MOBCB">MOBCB</option>
-          <option value="MOBCN">MOBCN</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>เลขที่ใบสั่ง</label>
-        <select id="filter_order" onchange="renderTable()">
-          <option value="">-- ALL ORDERS --</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>ขั้นตอน (STEP)</label>
-        <select id="filter_step" onchange="renderTable()">
-          <option value="">-- ALL STEPS --</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>พนักงาน</label>
-        <select id="filter_emp" onchange="renderTable()">
-          <option value="">-- ALL EMPLOYEES --</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label>เรียงลำดับ (SORT BY)</label>
-        <select id="filter_sort" onchange="renderTable()">
-          <option value="date_desc">วันที่ (ใหม่ไปเก่า)</option>
-          <option value="date_asc">วันที่ (เก่าไปใหม่)</option>
-          <option value="qty_desc">ยอดผลิต (มากไปน้อย)</option>
-          <option value="order_asc">เลขที่ใบสั่ง (A-Z)</option>
-        </select>
-      </div>
+        <!-- ตารางข้อมูล (สมมติข้อมูลขึ้นมาให้เห็นภาพ) -->
+        <table id="productionTable">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Order No</th>
+                    <th>Part No</th>
+                    <th>QTY</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>07/10/2026</td><td>MOMTC-261001</td><td>PART-A</td><td>500</td></tr>
+                <tr><td>07/10/2026</td><td>MOBCN-261005</td><td>PART-B</td><td>300</td></tr>
+                <tr><td>06/10/2026</td><td>MOMTN-261002</td><td>PART-C</td><td>1200</td></tr>
+                <tr><td>06/10/2026</td><td>MOBCC-261008</td><td>PART-D</td><td>150</td></tr>
+                <tr><td>05/10/2026</td><td>MOMTC-261009</td><td>PART-E</td><td>800</td></tr>
+                <tr><td>05/10/2026</td><td>SPECIAL-001</td><td>PART-F</td><td>50</td></tr>
+            </tbody>
+        </table>
     </div>
 
-    <div class="action-buttons">
-      <button class="btn btn-fetch" onclick="fetchDataFromDB()"><i class="fa-solid fa-rotate"></i> REFRESH</button>
-      <button class="btn btn-export" onclick="exportToExcelSheetJS()"><i class="fa-solid fa-file-excel"></i> EXCEL EXPORT</button>
-      <button class="btn btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> PRINT</button>
-    </div>
-  </div>
+    <script>
+        // ----------------------------------------------------
+        // 1. ฟังก์ชันเรียงลำดับข้อมูล (Sort Data) ในตาราง HTML
+        // ----------------------------------------------------
+        let sortAscending = true;
+        
+        function sortTable(columnIndex) {
+            const table = document.getElementById("productionTable");
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
 
-  <div class="table-responsive">
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>DATE</th>
-          <th>ORDER NO</th>
-          <th>WORK CODE</th>
-          <th>STEP</th>
-          <th>PO NUMBER</th>
-          <th>EMPLOYEE</th>
-          <th class="text-right">QTY (PCS)</th>
-          <th class="text-right">HOURS</th>
-          <th class="text-right
+            rows.sort((a, b) => {
+                const cellA = a.cells[columnIndex].innerText.trim();
+                const cellB = b.cells[columnIndex].innerText.trim();
+
+                if (cellA < cellB) return sortAscending ? -1 : 1;
+                if (cellA > cellB) return sortAscending ? 1 : -1;
+                return 0;
+            });
+
+            // สลับทิศทาง (มากไปน้อย / น้อยไปมาก) สำหรับการกดปุ่มครั้งถัดไป
+            sortAscending = !sortAscending;
+
+            // นำแถวที่เรียงแล้วกลับไปใส่ในตาราง
+            rows.forEach(row => tbody.appendChild(row));
+        }
+
+        // ----------------------------------------------------
+        // 2. ฟังก์ชัน Export Excel แยก Sheet ตามคำนำหน้า Order No
+        // ----------------------------------------------------
+        function exportExcel() {
+            const table = document.getElementById("productionTable");
+            const rows = table.querySelectorAll("tr");
+            
+            // กำหนดชื่อ Sheet ที่ต้องการจับกลุ่ม
+            const sheetNames = ["MOMTC", "MOMTN", "MOMTB", "MOBCC", "MOBCN", "MOBCB", "Others"];
+            const dataGroups = {};
+            
+            // ดึงข้อมูลหัวตาราง (Header)
+            const headers = [];
+            const headerCells = rows[0].querySelectorAll("th");
+            headerCells.forEach(th => headers.push(th.innerText));
+
+            // สร้าง Array เตรียมเก็บข้อมูลของแต่ละ Sheet โดยบรรทัดแรกใส่ Header ไว้เลย
+            sheetNames.forEach(sheet => {
+                dataGroups[sheet] = [headers]; 
+            });
+
+            // วนลูปอ่านข้อมูลในตารางตั้งแต่บรรทัดที่ 2 เป็นต้นไป (ข้าม Header)
+            for (let i = 1; i < rows.length; i++) {
+                const cells = rows[i].querySelectorAll("td");
+                const rowData = [];
+                cells.forEach(td => rowData.push(td.innerText));
+
+                // ดึงค่า Order No ออกมาเช็ค (อยู่ในคอลัมน์ที่ 2 หรือ index 1)
+                const orderNo = rowData[1] || ""; 
+                let matched = false;
+
+                // เช็คว่า Order No ขึ้นต้นด้วยคำไหน แล้วจับใส่กลุ่มนั้น
+                for (const prefix of sheetNames) {
+                    if (prefix !== "Others" && orderNo.startsWith(prefix)) {
+                        dataGroups[prefix].push(rowData);
+                        matched = true;
+                        break;
+                    }
+                }
+                
+                // ถ้าไม่ตรงกับกลุ่มหลักเลย ให้ไปอยู่ใน Sheet "Others"
+                if (!matched) {
+                    dataGroups["Others"].push(rowData);
+                }
+            }
+
+            // สร้างไฟล์ Excel Workbook จำลอง
+            const wb = XLSX.utils.book_new();
+
+            // นำข้อมูลแต่ละกลุ่มมาสร้างเป็น Sheet ยัดลงไปในไฟล์ Excel
+            sheetNames.forEach(sheet => {
+                // จะสร้าง Sheet เฉพาะกลุ่มที่มีข้อมูล (เช็คว่ามีแถวมากกว่า 1 คือมีข้อมูลที่ไม่ใช่แค่ Header)
+                if (dataGroups[sheet].length > 1) {
+                    const ws = XLSX.utils.aoa_to_sheet(dataGroups[sheet]);
+                    
+                    // ปรับความกว้างคอลัมน์ให้อ่านง่ายขึ้น (Option เสริม)
+                    ws['!cols'] = [{wch: 15}, {wch: 20}, {wch: 20}, {wch: 10}];
+                    
+                    XLSX.utils.book_append_sheet(wb, ws, sheet);
+                }
+            });
+
+            // สั่งดาวน์โหลดไฟล์
+            XLSX.writeFile(wb, "JAGUAR_PRODUCTION_Report.xlsx");
+        }
+    </script>
+</body>
+</html>
